@@ -1,92 +1,96 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 const LoanSimulator = ({ onOpenContact }) => {
-  const [propertyPrice, setPropertyPrice] = useState(1200000);
-  const [downPayment, setDownPayment] = useState(250000);
-  const [durationYears, setDurationYears] = useState(20);
-  const [interestRate, setInterestRate] = useState(3.45);
+  const [price, setPrice] = useState(1200000);
+  const [apport, setApport] = useState(250000);
+  const [duree, setDuree] = useState(20);
+  const [taux, setTaux] = useState(3.45);
 
-  const loanAmount = Math.max(0, propertyPrice - downPayment);
-  const notaireFees = Math.round(propertyPrice * 0.075); // ~7.5% en France pour l'ancien
+  const dureeOptions = [10, 15, 20, 25];
 
-  // Monthly payment formula
-  const monthlyRate = (interestRate / 100) / 12;
-  const numberOfPayments = durationYears * 12;
-  const monthlyPayment = monthlyRate > 0
-    ? Math.round((loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1))
-    : Math.round(loanAmount / numberOfPayments);
+  const results = useMemo(() => {
+    const montantEmprunte = Math.max(price - apport, 0);
+    const fraisNotaire = Math.round(price * 0.075);
+    const tauxMensuel = taux / 100 / 12;
+    const nbMois = duree * 12;
+    let mensualite = 0;
+    let coutInterets = 0;
+    if (tauxMensuel > 0 && montantEmprunte > 0) {
+      mensualite = Math.round(
+        (montantEmprunte * tauxMensuel) / (1 - Math.pow(1 + tauxMensuel, -nbMois))
+      );
+      coutInterets = mensualite * nbMois - montantEmprunte;
+    }
+    return { montantEmprunte, fraisNotaire, mensualite, coutInterets: Math.round(coutInterets) };
+  }, [price, apport, duree, taux]);
 
-  const totalCost = (monthlyPayment * numberOfPayments) - loanAmount;
+  const fmt = (n) => n.toLocaleString("fr-FR") + " €";
 
   return (
-    <section id="simulateur" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12 animate-fadeUp">
       
-      <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-        <span className="text-xs font-bold text-[#1e2b85] uppercase tracking-wider block">
+      {/* Header */}
+      <div className="text-center mb-12 space-y-3">
+        <span className="text-xs font-bold tracking-widest text-[#1e2b85] uppercase">
           Outil Financier & Patrimonial
         </span>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight">
-          Simulateur de Prêt Immobilier France
-        </h2>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+          Simulateur de Prêt Immobilier<br />France
+        </h1>
+        <p className="text-sm text-gray-500 max-w-xl mx-auto">
           Calculez vos mensualités, le montant empruntable et les frais de notaire estimés en quelques secondes.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-5xl mx-auto items-center">
+      {/* Main Card Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
         
-        {/* Sliders Form */}
-        <div className="lg:col-span-7 bg-white p-8 rounded-3xl shadow-sm border border-gray-200 space-y-6">
+        {/* Left - Sliders */}
+        <div className="lg:col-span-3 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-8">
           
-          {/* Property Price */}
-          <div>
-            <div className="flex justify-between text-xs font-bold text-gray-700 mb-2">
-              <span>Prix d'achat du bien</span>
-              <span className="text-[#1e2b85] text-sm">{propertyPrice.toLocaleString('fr-FR')} €</span>
+          {/* Prix d'achat */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-semibold text-gray-700">Prix d'achat du bien</span>
+              <span className="text-sm font-bold text-gray-900">{fmt(price)}</span>
             </div>
             <input
-              type="range"
-              min="200000"
-              max="6000000"
-              step="50000"
-              value={propertyPrice}
-              onChange={(e) => setPropertyPrice(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1e2b85]"
+              type="range" min={100000} max={5000000} step={50000}
+              value={price}
+              onChange={e => setPrice(Number(e.target.value))}
+              className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[#1e2b85]"
             />
           </div>
 
-          {/* Down Payment */}
-          <div>
-            <div className="flex justify-between text-xs font-bold text-gray-700 mb-2">
-              <span>Votre apport personnel</span>
-              <span className="text-[#1e2b85] text-sm">{downPayment.toLocaleString('fr-FR')} €</span>
+          {/* Apport */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-semibold text-gray-700">Votre apport personnel</span>
+              <span className="text-sm font-bold text-gray-900">{fmt(apport)}</span>
             </div>
             <input
-              type="range"
-              min="0"
-              max={propertyPrice}
-              step="25000"
-              value={downPayment}
-              onChange={(e) => setDownPayment(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1e2b85]"
+              type="range" min={0} max={price} step={10000}
+              value={apport}
+              onChange={e => setApport(Number(e.target.value))}
+              className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[#1e2b85]"
             />
           </div>
 
-          {/* Duration */}
-          <div>
-            <div className="flex justify-between text-xs font-bold text-gray-700 mb-2">
-              <span>Durée du crédit</span>
-              <span className="text-[#1e2b85] text-sm">{durationYears} ans ({durationYears * 12} mois)</span>
+          {/* Durée */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-semibold text-gray-700">Durée du crédit</span>
+              <span className="text-sm font-bold text-gray-900">{duree} ans ({duree * 12} mois)</span>
             </div>
             <div className="flex gap-2">
-              {[10, 15, 20, 25].map((d) => (
+              {dureeOptions.map(d => (
                 <button
                   key={d}
-                  onClick={() => setDurationYears(d)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                    durationYears === d
-                      ? "bg-[#1e2b85] text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  onClick={() => setDuree(d)}
+                  className={`flex-1 py-2.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+                    duree === d
+                      ? "bg-[#1e2b85] text-white border-[#1e2b85]"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-[#1e2b85] hover:text-[#1e2b85]"
                   }`}
                 >
                   {d} ans
@@ -95,64 +99,64 @@ const LoanSimulator = ({ onOpenContact }) => {
             </div>
           </div>
 
-          {/* Interest Rate */}
-          <div>
-            <div className="flex justify-between text-xs font-bold text-gray-700 mb-2">
-              <span>Taux d'intérêt annuel estimé</span>
-              <span className="text-[#1e2b85] text-sm">{interestRate} %</span>
+          {/* Taux */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-semibold text-gray-700">Taux d'intérêt annuel estimé</span>
+              <span className="text-sm font-bold text-gray-900">{taux.toFixed(2)} %</span>
             </div>
             <input
-              type="range"
-              min="2.0"
-              max="5.5"
-              step="0.05"
-              value={interestRate}
-              onChange={(e) => setInterestRate(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1e2b85]"
+              type="range" min={0.5} max={8} step={0.05}
+              value={taux}
+              onChange={e => setTaux(Number(e.target.value))}
+              className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-[#1e2b85]"
             />
           </div>
-
         </div>
 
-        {/* Results Card */}
-        <div className="lg:col-span-5 bg-[#1e2b85] text-white p-8 rounded-3xl shadow-2xl space-y-6">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-200 block">
-            Résultat de votre simulation
-          </span>
+        {/* Right - Results */}
+        <div className="lg:col-span-2 bg-[#1e2b85] rounded-3xl p-8 text-white flex flex-col justify-between shadow-xl shadow-[#1e2b85]/20">
+          <div className="space-y-6">
+            <p className="text-[10px] font-bold tracking-widest text-blue-200 uppercase">
+              Résultat de votre simulation
+            </p>
 
-          <div>
-            <div className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              {monthlyPayment.toLocaleString('fr-FR')} € <span className="text-sm font-normal text-blue-200">/ mois</span>
+            <div>
+              <div className="flex items-end gap-2">
+                <span className="text-5xl font-extrabold">
+                  {results.mensualite.toLocaleString("fr-FR")} €
+                </span>
+                <span className="text-blue-200 text-sm mb-1">/mois</span>
+              </div>
+              <p className="text-blue-200 text-xs mt-1">Hors assurance emprunteur</p>
             </div>
-            <p className="text-xs text-blue-100 mt-1">Hors assurance emprunteur</p>
-          </div>
 
-          <div className="space-y-3 pt-4 border-t border-blue-400/30 text-xs">
-            <div className="flex justify-between text-blue-100">
-              <span>Montant emprunté :</span>
-              <span className="font-bold text-white">{loanAmount.toLocaleString('fr-FR')} €</span>
-            </div>
-            <div className="flex justify-between text-blue-100">
-              <span>Frais de notaire estimés (~7.5%) :</span>
-              <span className="font-bold text-white">{notaireFees.toLocaleString('fr-FR')} €</span>
-            </div>
-            <div className="flex justify-between text-blue-100">
-              <span>Coût total des intérêts :</span>
-              <span className="font-bold text-white">{totalCost.toLocaleString('fr-FR')} €</span>
+            <div className="space-y-3 pt-4 border-t border-blue-400/30 text-sm">
+              <div className="flex justify-between">
+                <span className="text-blue-200">Montant emprunté :</span>
+                <span className="font-bold">{results.montantEmprunte.toLocaleString("fr-FR")} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-200">Frais de notaire estimés (~7.5%) :</span>
+                <span className="font-bold">{results.fraisNotaire.toLocaleString("fr-FR")} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-200">Coût total des intérêts :</span>
+                <span className="font-bold">{results.coutInterets.toLocaleString("fr-FR")} €</span>
+              </div>
             </div>
           </div>
 
           <button
             onClick={onOpenContact}
-            className="w-full bg-white text-[#1e2b85] hover:bg-blue-50 text-xs font-extrabold py-3.5 rounded-xl uppercase tracking-wider transition-all shadow-md cursor-pointer"
+            className="mt-8 w-full bg-white text-[#1e2b85] hover:bg-blue-50 font-extrabold text-xs tracking-widest uppercase py-4 rounded-2xl transition-all cursor-pointer"
           >
             Faire étudier mon dossier par un courtier
           </button>
         </div>
 
       </div>
-
-    </section>
+    </div>
   );
 };
 

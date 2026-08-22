@@ -1,3 +1,4 @@
+import logoImg from "../assets/logo.png";
 import React from "react";
 
 const Footer = () => {
@@ -10,7 +11,7 @@ const Footer = () => {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <img
-                src="/logo.png"
+                src={logoImg}
                 alt="NOVA IMMOBILIER Logo"
                 className="h-8 w-auto object-contain"
               />

@@ -1,3 +1,4 @@
+import logoImg from "../assets/logo.png";
 import React, { useState } from "react";
 
 const Navbar = ({ activeTab, setActiveTab, onOpenContact, favoritesCount, onOpenFavorites }) => {
@@ -41,11 +42,11 @@ const Navbar = ({ activeTab, setActiveTab, onOpenContact, favoritesCount, onOpen
           onClick={() => setActiveTab("accueil")}
           className="flex items-center gap-2 cursor-pointer group"
         >
-          <img
-            src="/logo.png"
+<img
+            src={logoImg}
             alt="NOVA IMMOBILIER Logo"
             className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
-          />
+/>
           <span className="font-extrabold text-sm sm:text-base tracking-tight text-[#1e2b85] uppercase hidden sm:inline">
             NOVA IMMOBILIER
           </span>
